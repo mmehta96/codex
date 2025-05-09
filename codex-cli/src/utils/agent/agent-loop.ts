@@ -320,6 +320,9 @@ export class AgentLoop {
       },
       httpAgent: PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined,
       ...(timeoutMs !== undefined ? { timeout: timeoutMs } : {}),
+      defaultQuery: {
+        ...(config?.providers && config?.providers[provider]?.apiVersion ? { 'api-version':config?.providers[provider].apiVersion } : {}),
+      }
     });
 
     setSessionId(this.sessionId);

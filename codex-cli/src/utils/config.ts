@@ -143,7 +143,7 @@ export type StoredConfig = {
   notify?: boolean;
   /** Disable server-side response storage (send full transcript each request) */
   disableResponseStorage?: boolean;
-  providers?: Record<string, { name: string; baseURL: string; envKey: string }>;
+  providers?: Record<string, { name: string; baseURL: string; envKey: string, apiVersion?: string }>;
   history?: {
     maxSize?: number;
     saveHistory?: boolean;
@@ -190,7 +190,7 @@ export type AppConfig = {
 
   /** Enable the "flex-mode" processing mode for supported models (o3, o4-mini) */
   flexMode?: boolean;
-  providers?: Record<string, { name: string; baseURL: string; envKey: string }>;
+  providers?: Record<string, { name: string; baseURL: string; envKey: string, apiVersion?: string }>;
   history?: {
     maxSize: number;
     saveHistory: boolean;
