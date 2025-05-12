@@ -158,6 +158,10 @@ export type StoredConfig = {
   /** User-defined safe commands */
   safeCommands?: Array<string>;
   reasoningEffort?: ReasoningEffort;
+  /**
+   * Configuration for Model Context Protocol servers.
+   */
+  mcpServers?: Record<string, { url: string }>;
 };
 
 // Minimal config written on first run.  An *empty* model string ensures that
@@ -202,6 +206,10 @@ export type AppConfig = {
       maxLines: number;
     };
   };
+  /**
+   * Configuration for Model Context Protocol servers.
+   */
+  mcpServers?: Record<string, { url: string }>;
 };
 
 // Formatting (quiet mode-only).
@@ -489,6 +497,11 @@ export const loadConfig = (
       saveHistory: true,
       sensitivePatterns: [],
     };
+  }
+
+  // Include MCP server definitions from stored config, if any
+  if (storedConfig.mcpServers) {
+    config.mcpServers = storedConfig.mcpServers;
   }
 
   // Merge default providers with user configured providers in the config.

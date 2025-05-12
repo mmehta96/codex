@@ -32,6 +32,7 @@ import { handleExecCommand } from "./handle-exec-command.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { randomUUID } from "node:crypto";
 import OpenAI, { APIConnectionTimeoutError } from "openai";
+import { getMcpToolDefinitions, handleMcpFunctionCall } from "./mcp.js";
 
 // Wait time before retrying after rate limit errors (ms).
 const RATE_LIMIT_RETRY_WAIT_MS = parseInt(
@@ -379,6 +380,11 @@ export class AgentLoop {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const callId: string = (item as any).call_id ?? (item as any).id;
 
+    // If function name matches a configured MCP server, route the call
+    if (this.config?.mcpServers && name && name in this.config.mcpServers) {
+      return handleMcpFunctionCall(this.config.mcpServers, name, rawArguments, callId);
+    }
+
     const args = parseToolCallArguments(rawArguments ?? "{}");
     log(
       `handleFunctionCall(): name=${
@@ -707,6 +713,12 @@ export class AgentLoop {
               `instructions (length ${mergedInstructions.length}): ${mergedInstructions}`,
             );
 
+            const toolsList: Array<any> = [shellTool];
+            // Include MCP function definitions, if any
+            toolsList.push(...getMcpToolDefinitions(this.config?.mcpServers));
+
+            console.log(toolsList);
+
             // eslint-disable-next-line no-await-in-loop
             stream = await responseCall({
               model: this.model,
@@ -722,7 +734,7 @@ export class AgentLoop {
                     store: true,
                     previous_response_id: lastResponseId || undefined,
                   }),
-              tools: [shellTool],
+              tools: toolsList,
               // Explicitly tell the model it is allowed to pick whatever
               // tool it deems appropriate.  Omitting this sometimes leads to
               // the model ignoring the available tools and responding with
@@ -1083,6 +1095,13 @@ export class AgentLoop {
                 "agentLoop.run(): responseCall(1): turnInput: " +
                   JSON.stringify(turnInput),
               );
+
+              const toolsList: Array<any> = [shellTool];
+              // Include MCP function definitions, if any
+              toolsList.push(...getMcpToolDefinitions(this.config?.mcpServers));
+
+              console.log(toolsList)
+
               // eslint-disable-next-line no-await-in-loop
               stream = await responseCall({
                 model: this.model,
@@ -1098,7 +1117,7 @@ export class AgentLoop {
                       store: true,
                       previous_response_id: lastResponseId || undefined,
                     }),
-                tools: [shellTool],
+                tools: toolsList,
                 tool_choice: "auto",
               });
 
